@@ -17,12 +17,15 @@ const server = http.createServer(app); //이건 http 서버임
 const wss = new WebSocket.Server({ server });
 //이건 웹 소켓인데 http 위에 만들어진 웹소켓임 
 
-
-
-function handleConnection(socket){ //여기서의 소켓은 연결된 브라우저를 뜻함 
-    console.log(socket);
+function onSocketMessage(message){
+    console.log(message);
 }
 
-wss.on("connection", handleConnection)
+wss.on("connection", (socket)=> {
+    console.log("Connected to Browser ✅");
+    socket.on("close", () => console.log(console.log("Disconnected to Server ❌")));
+    socket.on("message", onSocketMessage);
+    socket.send("hello!!"); //백앤드에서 메세지를 보내면 프론트 앤트(app.js)에서 받아야한다. 
+});
 
 server.listen(3000, handleListen);
