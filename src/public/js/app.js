@@ -1,3 +1,5 @@
+const messageList = document.querySelector("ul");
+const messageForm = document.querySelector("form");
 const socket = new WebSocket(`ws://${window.location.host}`);
 // 여기 소켓은 서버로의 련결을 뜻함
 
@@ -15,6 +17,12 @@ socket.addEventListener("close", () => {
     console.log("Disconnected to Server ❌");
 });
 
-setTimeout(() => {
-    socket.send("hello from the brower!");
-}, 10000 );
+
+function handleSubmit(event){
+    event.preventDefault();
+    const input = messageForm.querySelector("input");
+    socket.send(input.value);
+    input.value = "";
+}
+
+messageForm.addEventListener("submit", handleSubmit);
