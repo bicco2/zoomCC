@@ -17,8 +17,22 @@ const httpServer = http.createServer(app); //이건 http 서버임
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
-  console.log(socket);
-})
+  //console.log(socket);
+  socket.on("enter_room", (roomName, done) => {
+     socket.join(roomName);
+     done();
+     socket.to(roomName).emit("welcome"); 
+  });
+
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+  });
+
+  socket.on("new_message",(msg, room, done) => {
+    socket.to(room).emit("new_message", msg);
+    done();
+  });
+});
 /* 
 const wss = new WebSocket.Server({ server });
 //이건 웹 소켓인데 http 위에 만들어진 웹소켓임 
