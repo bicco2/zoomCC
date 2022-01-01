@@ -1,37 +1,82 @@
 import http from "http";
-import SocketIO from "socket.io";
+import {Server} from "socket.io";
+import {instrument} from "@socket.io/admin-ui";
 import express from "express";
 
 const app = express();
 
 app.set("view engine", "pug");
-app.set("views",__dirname+ "/views");
-app.use("/public", express.static(__dirname +"/public"));
-app.get("/",(req,res)=> res.render("home"));
-app.get("/*",(req, res) => res.redirect("/"));
+app.set("views", __dirname + "/views");
+app.use("/public", express.static(__dirname + "/public"));
+app.get("/", (req, res) => res.render("home"));
+app.get("/*", (req, res) => res.redirect("/"));
 //서버 연결 코드임 . 여긴 아직 공부 필요 
 
 
 const httpServer = http.createServer(app); //이건 http 서버임 
 //웹소켓을 위해 꼭 필요한 부분 
-const wsServer = SocketIO(httpServer);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(wsServer, {
+  auth: false,
+});
+function publicRooms() {
+
+  const { 
+    sockets: { 
+      adapter: { sids, rooms},
+     },
+   } = wsServer;
+
+   //위에 꺼랑 같은 코딩임 
+   //const sids =wsServer.sockets.adapter.sids;
+   //const rooms = wsServer.sockets.adpater.rooms;
+
+  const publicRooms = [];
+
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
+function countRoom(roomName){
+  wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 
 wsServer.on("connection", (socket) => {
   wsServer.socketsJoin("announcement");
   socket["nickname"] = "Anon";
+  socket.onAny((event) => {
+    // console.log(wsServer.sockets.adapter);
+    console.log(`Socket Event: ${event}`);
+  })
   //console.log(socket);
   socket.on("enter_room", (roomName, done) => {
-     socket.join(roomName);
-     done();
-     socket.to(roomName).emit("welcome", socket.nickname); 
+    socket.join(roomName);
+    done();
+    socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
+    wsServer.sockets.emit("room_change", publicRooms());
   });
 
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => 
-    socket.to(room).emit("bye", socket.nickname));
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1));
   });
 
-  socket.on("new_message",(msg, room, done) => {
+  socket.on("disconnecting", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
+  });
+
+  socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
     done();
   });
@@ -79,7 +124,7 @@ wss.on("connection", (socket) => {
       }
     });
   }); */
-  
+
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
 httpServer.listen(3000, handleListen);
