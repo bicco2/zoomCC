@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 const app = express();
@@ -11,16 +11,22 @@ app.get("/",(req,res)=> res.render("home"));
 app.get("/*",(req, res) => res.redirect("/"));
 //서버 연결 코드임 . 여긴 아직 공부 필요 
 
-const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-const server = http.createServer(app); //이건 http 서버임 
+const httpServer = http.createServer(app); //이건 http 서버임 
 //웹소켓을 위해 꼭 필요한 부분 
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", (socket) => {
+  console.log(socket);
+})
+/* 
 const wss = new WebSocket.Server({ server });
 //이건 웹 소켓인데 http 위에 만들어진 웹소켓임 
 
 // function onSocketMessage(message){
 //     socket.send(message.toString('utf8'));
 // }
+
 
 function onSocketClose(){
     console.log(console.log("Disconnected to Server ❌"));
@@ -53,6 +59,8 @@ wss.on("connection", (socket) => {
           socket["nickname"] = message.payload;
       }
     });
-  });
+  }); */
+  
+const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-server.listen(3000, handleListen);
+httpServer.listen(3000, handleListen);
