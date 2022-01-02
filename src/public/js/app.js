@@ -1,8 +1,9 @@
 const socket =io();
 //io 가 알아서 서버 찾아서 해줌 
 const welcome = document.getElementById("welcome");
-const form = welcome.querySelector("form");
+const enterForm = welcome.querySelector("#roomTitle");
 const room = document.getElementById("room");
+
 
 room.hidden = true;
 
@@ -25,11 +26,11 @@ function handleMessageSubmit(event){
     input.value ="";
 }
 
-function handleNicknameSubmit(event){
-    event.preventDefault();
-    const input = room.querySelector("#name input");
-    socket.emit("nickname", input.value);
-}
+// function handleNicknameSubmit(event){
+//     event.preventDefault();
+//     const input = welcome.querySelector("#name input");
+//     socket.emit("nickname", input.value);
+// }
 
 function showRoom(){
     welcome.hidden = true;
@@ -37,20 +38,22 @@ function showRoom(){
     const h3 = room.querySelector("h3");
     h3.innerText = `Room ${roomName}`;
     const msgForm = room.querySelector("#msg");
-    const nameForm = room.querySelector("#name");
+    //const nameForm = welcome.querySelector("#name");
     msgForm.addEventListener("submit", handleMessageSubmit);
-    nameForm.addEventListener("submit", handleNicknameSubmit);
+    //nameForm.addEventListener("submit", handleNicknameSubmit);
 }
 
 function handleRoomSubmit(event){
     event.preventDefault();
-    const input = form.querySelector("input");
-    socket.emit("enter_room", input.value, showRoom);
-    roomName = input.value;
-    input.value = "";
+    const input1 = enterForm.querySelector("input");
+    const input2 = welcome.querySelector("#name input");
+    socket.emit("nickname", input2.value);
+    socket.emit("enter_room", input1.value, showRoom);
+    roomName = input1.value;
+    input1.value = "";
 }
 
-form.addEventListener("submit", handleRoomSubmit);
+enterForm.addEventListener("submit", handleRoomSubmit);
 
 socket.on("welcome", (user, newCount) => {
     const h3 = room.querySelector("h3");
@@ -60,8 +63,12 @@ socket.on("welcome", (user, newCount) => {
 
 socket.on("bye", (left, newCount) => {
     const h3 = room.querySelector("h3");
+
     h3.innerText = `Room ${roomName} (${newCount})`;
-    addMessage(`${left} left ㅠㅠ`);
+    const input2 = welcome.querySelector("#name input");
+    if(input2 != null){
+        addMessage(`${left} left ㅠㅠ`);
+    }
 });
 
 socket.on("new_message", addMessage);

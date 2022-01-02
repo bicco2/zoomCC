@@ -10,8 +10,12 @@ html(lang="en")
         header 
             h1 Noom!
         main 
+            ul What nickname?
             div#welcome
-                form
+                form#name
+                    input(placeholder="nickname", required, type="text")
+            ul What room? 
+                form#roomTitle
                     input(placeholder="room name", required, type="text")
                     button Enter Room
                 h4 Open Rooms: 
@@ -19,9 +23,6 @@ html(lang="en")
             div#room
                 h3
                 ul
-                form#name
-                    input(placeholder="nickname", required, type="text")
-                    button Save
                 form#msg
                     input(placeholder="message", required, type="text")
                     button Send
