@@ -48,7 +48,7 @@ function publicRooms() {
 }
 
 function countRoom(roomName){
-  wsServer.sockets.adapter.rooms.get(roomName)?.size;
+    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
 }
 
 
@@ -63,6 +63,7 @@ wsServer.on("connection", (socket) => {
   socket.on("enter_room", (roomName, done) => {
     socket.join(roomName);
     done();
+    //재실행?
     socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
     wsServer.sockets.emit("room_change", publicRooms());
   });
